@@ -4,6 +4,7 @@ import justs_js.cel.CELModLib;
 import justs_js.twas.entity.TwitchingArmorStand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.phys.Vec3;
@@ -97,7 +98,9 @@ public class TWASManager {
         ArmorStand stand = parseUUID(uuid);
         if (stand == null) {return;}
         TwitchingArmorStand twStand = new TwitchingArmorStand(TWASModClient.TWITCHING_ARMOR_STAND, level);
-        twStand.snapTo(new Vec3(stand.getX(), stand.getY() + 0.15d, stand.getZ()), stand.getYRot(), stand.getXRot());
+        Optional<BlockPos> blockPos = level.findSupportingBlock(stand, stand.getBoundingBox().expandTowards(0, 2, 0));
+        Vec3 pos = blockPos.orElse(BlockPos.ZERO.atY(stand.getBlockY())).getBottomCenter().add(0, 1, 0);
+        twStand.snapTo(new Vec3(stand.getX(), pos.y() + 0.15d, stand.getZ()), stand.getYRot(), stand.getXRot());
         twStand.bound(nickname);
         twStand.bound(uuid);
         CELModLib.controller.addEntity(twStand);

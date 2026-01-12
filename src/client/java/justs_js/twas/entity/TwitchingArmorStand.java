@@ -12,13 +12,11 @@ import justs_js.cel.client.api.ClientBrain;
 import justs_js.cel.client.api.ClientEntity;
 import justs_js.cel.client.api.behaviour.*;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.*;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.valueproviders.BiasedToBottomInt;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
@@ -29,7 +27,6 @@ import net.minecraft.world.entity.schedule.Schedule;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
@@ -42,19 +39,16 @@ public class TwitchingArmorStand extends ClientEntity {
     private UUID boundedUUID;
     private Vec3 prevPosForPrevPacket;
 
+    private final TwitchingAnimator animator = new TwitchingAnimator(true, 1f);
+
     @Override
     public void tick() {
         super.tick();
         if (getBoundedNickname() == null || getBoundedNickname().isEmpty() || getBoundedUUID() == null || getBoundedArmorStand() == null) {
             return;
         }
+        animator.tick(position(), oldPosition());
         sendArmorPoserPacket(createArmorStandCompound(this.tickCount % 5 == 0));
-    }
-
-    protected @NotNull ClientBrain<? extends ClientEntity> makeBrain(Dynamic<?> dynamic) {
-        ClientBrain<? extends ClientEntity> brain = this.clientBrainProvider().makeBrain(dynamic);
-        this.registerBrainGoals(brain);
-        return brain;
     }
 
     @Override
@@ -118,9 +112,9 @@ public class TwitchingArmorStand extends ClientEntity {
         }
         poseHeadTag.add(FloatTag.valueOf(headTilt));
         poseTag.put("Head", poseHeadTag);
-//        if (shouldAnimateMoving()) {
-//            poseTag.merge(getAnimatedPoseState());
-//        }
+        if (this.animator.getAnimateMovement()) {
+            poseTag.merge(this.animator.getAnimatedPoseState());
+        }
         compoundTag.put("Pose", poseTag);
 
         ListTag rotationTag = new ListTag();
