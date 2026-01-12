@@ -1,7 +1,6 @@
 package justs_js.twas.entity;
 
 import com.google.common.collect.ImmutableSet;
-import justs_js.twas.TWASModClient;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
@@ -171,6 +170,7 @@ public class TwitchingAnimator {
         JUMP = new Animation(2f, 3f, 30f){
             @Override
             void tick(float delta, float size) {
+                delta *= delta * Math.signum(delta);
                 float appliedSpeed = this.animationSpeed * 1 / size;
                 animationIntensity = Math.clamp(Math.abs(delta) * animationMultiplier, 0f, 1f);
                 animationAngle += appliedSpeed * Math.signum(delta);
