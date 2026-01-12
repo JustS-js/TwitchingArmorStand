@@ -13,8 +13,8 @@ public class TwitchingAnimator {
     private boolean animateMovement;
     private float size;
 
-    private static Animation MOVEMENT;
-    private static Animation JUMP;
+    private final Animation MOVEMENT;
+    private final Animation JUMP;
     private final Set<Animation> animations;
 
     public void tick(Vec3 pos, Vec3 oldPos) {
