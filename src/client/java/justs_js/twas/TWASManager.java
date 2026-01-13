@@ -14,19 +14,25 @@ import java.util.*;
 public class TWASManager {
     private static final Map<UUID, String> observedUuids = new HashMap<>();
 
+    private static List<String> parseCmd(String cmd) {
+        return List.of(cmd.split(" "));
+    }
+
     public static void applyCommand(String nickname, String command) {
         CELModLib.controller.forEach(
                 (e) -> {
                     TwitchingArmorStand stand = (TwitchingArmorStand) e;
                     if (!stand.getBoundedNickname().equals(nickname)) return;
-//                    String cmd = command.substring(3);
-//                    switch (cmd) {
-//                        case "jump" -> stand.requestJump();
-//                        case "jump" -> stand.requestJump();
-//                        case null, default -> {
-//                            return;
-//                        }
-//                    }
+                    String cmd = command.substring(3);
+                    List<String> parsed = parseCmd(cmd);
+                    if (parsed.isEmpty()) return;
+                    String first = parsed.getFirst();
+                    switch (first) {
+                        case "twerk", "hello", "clap" -> stand.emote(first);
+                        case "jump" -> stand.requestJump();
+                        case "follow" -> stand.requestFollow(parsed.size() > 1 ? parsed.get(1) : null);
+                        case null, default -> {}
+                    }
                 }
         );
     }

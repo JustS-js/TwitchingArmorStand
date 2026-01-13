@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.Dynamic;
 import com.mrbysco.armorposer.Reference;
 import com.mrbysco.armorposer.data.SyncData;
 import com.mrbysco.armorposer.packets.ArmorStandSyncPayload;
@@ -37,9 +36,8 @@ public class TwitchingArmorStand extends ClientEntity {
 
     private String boundedNickname;
     private UUID boundedUUID;
-    private Vec3 prevPosForPrevPacket;
 
-    private final TwitchingAnimator animator = new TwitchingAnimator(true, 1f);
+    private final TwitchingAnimator animator = new TwitchingAnimator(1f);
 
     @Override
     public void tick() {
@@ -51,11 +49,28 @@ public class TwitchingArmorStand extends ClientEntity {
         sendArmorPoserPacket(createArmorStandCompound(this.tickCount % 5 == 0));
     }
 
+    public void requestJump() {
+
+    }
+
+    public void requestFollow(String entityName) {
+
+    }
+
     @Override
     public void checkDespawn() {
         super.checkDespawn();
         if (this.getBoundedArmorStand() == null) {
             this.discard();
+        }
+    }
+
+    public void emote(String emote) {
+        switch (emote) {
+            case "twerk" -> this.animator.setAnimateTwerk(true);
+            case "hello" -> this.animator.setAnimateHello(true);
+            case "clap" -> this.animator.setAnimateClap(true);
+            case null, default -> {return;}
         }
     }
 
@@ -70,17 +85,6 @@ public class TwitchingArmorStand extends ClientEntity {
 
     private ArmorStand getBoundedArmorStand() {
         return (ArmorStand) this.level().getEntity(getBoundedUUID());
-    }
-
-    private Vec3 getDeltaMoveBetweenPackets() {
-        if (prevPosForPrevPacket == null) {
-            prevPosForPrevPacket = new Vec3(this.getX(), this.getY(), this.getZ());
-            return Vec3.ZERO;
-        }
-        Vec3 prevPos = prevPosForPrevPacket;
-        Vec3 currentPos = new Vec3(this.getX(), this.getY(), this.getZ());
-        prevPosForPrevPacket = currentPos;
-        return currentPos.subtract(prevPos);
     }
 
     public CompoundTag createArmorStandCompound(boolean shouldSync) {
@@ -99,7 +103,6 @@ public class TwitchingArmorStand extends ClientEntity {
         ListTag poseHeadTag = new ListTag();
         poseHeadTag.add(FloatTag.valueOf(this.getXRot()));
         poseHeadTag.add(FloatTag.valueOf(this.yHeadRot - this.yBodyRot));
-        //TWASModClient.LOGGER.info("{} | {}", this.yHeadRot, this.yBodyRot);
         float headTilt = 0;
         if (original.contains("Pose")) {
             CompoundTag originalPoseTag = original.getCompoundOrEmpty("Pose");

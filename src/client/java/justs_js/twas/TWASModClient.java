@@ -92,7 +92,7 @@ public class TWASModClient implements ClientModInitializer {
 					String command = ((TwitchChatMessageEvent) event).getMessageText();
 					if (CONFIG.twitchNameToEntityUUID.containsKey(nickname) && command.startsWith("!s ")) {
 						LOGGER.info("[{}]: {}",nickname,command);
-						TWASManager.applyCommand(nickname,command);
+						TWASManager.applyCommand(nickname,command.toLowerCase(Locale.ROOT));
 					}
 				}
 		);
