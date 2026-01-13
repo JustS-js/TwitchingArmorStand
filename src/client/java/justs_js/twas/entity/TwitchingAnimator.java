@@ -231,7 +231,7 @@ public class TwitchingAnimator {
         };
 
         HELLO = new Animation(0.155f, 3f, 120f) {
-            private final int maxTicksLeft = 64;
+            private final int maxTicksLeft = 40;
             private int ticksLeft = maxTicksLeft;
 
             @Override

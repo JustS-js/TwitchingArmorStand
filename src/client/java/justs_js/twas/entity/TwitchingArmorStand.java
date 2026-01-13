@@ -10,10 +10,14 @@ import com.mrbysco.armorposer.packets.ArmorStandSyncPayload;
 import justs_js.cel.client.api.ClientBrain;
 import justs_js.cel.client.api.ClientEntity;
 import justs_js.cel.client.api.behaviour.*;
+import justs_js.twas.TWASModClient;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.nbt.*;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.valueproviders.BiasedToBottomInt;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -27,6 +31,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.List;
 import java.util.UUID;
 
 public class TwitchingArmorStand extends ClientEntity {
@@ -50,11 +55,24 @@ public class TwitchingArmorStand extends ClientEntity {
     }
 
     public void requestJump() {
-
+        ClientBrain<TwitchingArmorStand> brain = (ClientBrain<TwitchingArmorStand>)this.getBrain();
+        brain.stopAll((ClientLevel) this.level(), this);
+        this.getBrain().setActiveActivityIfPossible(Activity.CELEBRATE);
     }
 
     public void requestFollow(String entityName) {
-
+        List<Entity> entitiesWithRequestedName = this.level().getEntities(
+                this,
+                this.getBoundingBox().inflate(64),
+                (e) -> entityName.equals(e.getPlainTextName().toLowerCase())
+        );
+        Minecraft.getInstance().execute(() -> TWASModClient.LOGGER.info("{} | {}", entityName, entitiesWithRequestedName));
+        if (entitiesWithRequestedName.isEmpty()) return;
+        Entity first = entitiesWithRequestedName.getFirst();
+        ClientBrain<TwitchingArmorStand> brain = (ClientBrain<TwitchingArmorStand>)this.getBrain();
+        brain.stopAll((ClientLevel) this.level(), this);
+        this.setFollowTargetEntity(first);
+        brain.setActiveActivityIfPossible(Activity.INVESTIGATE);
     }
 
     @Override
@@ -76,8 +94,10 @@ public class TwitchingArmorStand extends ClientEntity {
 
     protected void registerBrainGoals(ClientBrain<? extends ClientEntity> brain) {
         brain.setSchedule(Schedule.EMPTY);
-        brain.addActivity(Activity.IDLE, ImmutableList.of(Pair.of(0, new ClientRunOne(ImmutableMap.of(MemoryModuleType.LOOK_TARGET, MemoryStatus.REGISTERED, MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES, MemoryStatus.REGISTERED, MemoryModuleType.GAZE_COOLDOWN_TICKS, MemoryStatus.REGISTERED), ImmutableList.of(Pair.of(new ClientDoNothing(30, 60), 1), Pair.of(ClientSetEntityLookTarget.create((e) -> !e.getUUID().equals(this.getBoundedUUID()), 4.0F), 1), Pair.of(new ClientRandomLookAround(BiasedToBottomInt.of(100, 200), 60.0F, 30.0F, 90.0F), 1), Pair.of(new ClientLookAtTargetSink(30, 60), 1)))), Pair.of(2, new ClientRunOne(ImmutableMap.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED), ImmutableList.of(Pair.of(new ClientDoNothing(60, 120), 1), Pair.of(ClientRandomStroll.stroll(0.75F), 1), Pair.of(new ClientJumpOnSpot(), 1), Pair.of(new ClientMoveToTargetSink(), 1)))), Pair.of(1, new ClientFollowTargetSink(0.9F))));
+        brain.addActivity(Activity.IDLE, ImmutableList.of(Pair.of(0, new ClientRunOne(ImmutableMap.of(MemoryModuleType.LOOK_TARGET, MemoryStatus.REGISTERED, MemoryModuleType.NEAREST_VISIBLE_LIVING_ENTITIES, MemoryStatus.REGISTERED, MemoryModuleType.GAZE_COOLDOWN_TICKS, MemoryStatus.REGISTERED), ImmutableList.of(Pair.of(new ClientDoNothing(30, 60), 1), Pair.of(ClientSetEntityLookTarget.create((e) -> !e.getUUID().equals(this.getBoundedUUID()), 4.0F), 1), Pair.of(new ClientRandomLookAround(BiasedToBottomInt.of(100, 200), 60.0F, 30.0F, 90.0F), 1), Pair.of(new ClientLookAtTargetSink(30, 60), 1)))), Pair.of(2, new ClientRunOne(ImmutableMap.of(MemoryModuleType.WALK_TARGET, MemoryStatus.REGISTERED), ImmutableList.of(Pair.of(new ClientDoNothing(60, 120), 1), Pair.of(ClientRandomStroll.stroll(0.75F), 1), Pair.of(new ClientJumpOnSpot(), 1), Pair.of(new ClientMoveToTargetSink(), 1))))));
         brain.addActivity(Activity.CORE, ImmutableList.of(Pair.of(0, new ClientSwim(0.3F))));
+        brain.addActivity(Activity.CELEBRATE, ImmutableList.of(Pair.of(0, new ClientJumpOnSpot())));
+        brain.addActivity(Activity.INVESTIGATE, ImmutableList.of(Pair.of(0, new ClientFollowTargetSink(0.9F)), Pair.of(0, new ClientLookAtTargetSink(30, 60)), Pair.of(0, new ClientMoveToTargetSink())));
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
         brain.setDefaultActivity(Activity.IDLE);
         brain.setActiveActivityIfPossible(Activity.IDLE);
