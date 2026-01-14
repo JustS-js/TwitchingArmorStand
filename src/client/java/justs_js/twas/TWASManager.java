@@ -2,13 +2,11 @@ package justs_js.twas;
 
 import justs_js.cel.CELModLib;
 import justs_js.cel.client.api.ClientBrain;
-import justs_js.cel.client.api.ClientEntity;
 import justs_js.twas.entity.TwitchingArmorStand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.phys.Vec3;
@@ -35,13 +33,12 @@ public class TWASManager {
                         case "twerk", "hello", "clap" -> stand.emote(first);
                         case "jump" -> stand.requestJump();
                         case "follow" -> stand.requestFollow(parsed.size() > 1 ? parsed.get(1) : "");
-                        case "stop" -> {
+                        case "stop" -> Minecraft.getInstance().execute(() -> {
                             stand.setFollowTargetEntity(null);
                             ClientBrain<TwitchingArmorStand> brain = (ClientBrain<TwitchingArmorStand>)stand.getBrain();
                             brain.stopAll((ClientLevel) stand.level(), stand);
                             brain.setActiveActivityIfPossible(Activity.IDLE);
-                            //Minecraft.getInstance().execute(() -> TWASModClient.LOGGER.info("{}", brain.getMemory(MemoryModuleType.WALK_TARGET).map(Objects::toString).orElse("")));
-                        }
+                        });
                         case null, default -> {}
                     }
                 }
