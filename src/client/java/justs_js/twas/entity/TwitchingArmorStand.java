@@ -10,6 +10,7 @@ import com.mrbysco.armorposer.packets.ArmorStandSyncPayload;
 import justs_js.cel.client.api.ClientBrain;
 import justs_js.cel.client.api.ClientEntity;
 import justs_js.cel.client.api.behaviour.*;
+import justs_js.twas.entity.behavior.CustomClientFollowTargetSink;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -51,7 +52,7 @@ public class TwitchingArmorStand extends ClientEntity {
             return;
         }
         animator.tick(position(), oldPosition());
-        sendArmorPoserPacket(createArmorStandCompound(this.tickCount % 5 == 0));
+        sendArmorPoserPacket(createArmorStandCompound(true));
     }
 
     public void requestJump() {
@@ -74,7 +75,9 @@ public class TwitchingArmorStand extends ClientEntity {
                             (e) -> entityName.equals(e.getPlainTextName().toLowerCase())
                     );
                     if (entitiesWithRequestedName.isEmpty()) return;
-                    Entity first = entitiesWithRequestedName.getFirst();
+                    Entity first = entitiesWithRequestedName.stream().filter(
+                            (e) -> !e.getUUID().equals(this.getBoundedUUID())
+                    ).findFirst().orElse(null);
                     ClientBrain<TwitchingArmorStand> brain = (ClientBrain<TwitchingArmorStand>)this.getBrain();
                     brain.stopAll((ClientLevel) this.level(), this);
                     this.setFollowTargetEntity(first);
@@ -125,7 +128,7 @@ public class TwitchingArmorStand extends ClientEntity {
         brain.addActivity(Activity.CORE, ImmutableList.of(Pair.of(0, new ClientSwim(0.3F))));
         brain.addActivity(Activity.CELEBRATE, ImmutableList.of(Pair.of(0, new ClientJumpOnSpot())));
         brain.addActivity(Activity.INVESTIGATE, ImmutableList.of(
-                Pair.of(0, new ClientFollowTargetSink(0.9F)),
+                Pair.of(0, new CustomClientFollowTargetSink(0.9F, 4)),
                 Pair.of(0, new ClientLookAtTargetSink(30, 60)),
                 Pair.of(0, new ClientMoveToTargetSink())
         ));
@@ -178,20 +181,25 @@ public class TwitchingArmorStand extends ClientEntity {
 
         ListTag positionOffset = new ListTag();
 
-        Vec3 armorStandPos = this.getBoundedArmorStand().getPosition(1);
-        double dx = this.getX() - this.xOld;
-        double dy = this.getY() - this.yOld;
-        double dz = this.getZ() - this.zOld;
-        double threshold = 1E-2d;
-        if (shouldSync) {
-            dx = this.getX() - armorStandPos.x;
-            dy = this.getY() - armorStandPos.y;
-            dz = this.getZ() - armorStandPos.z;
+        if (this.tickCount % 4 == 0) {
+            Vec3 armorStandPos = this.getBoundedArmorStand().getPosition(1);
+            double dx = this.getX() - this.xOld;
+            double dy = this.getY() - this.yOld;
+            double dz = this.getZ() - this.zOld;
+            double threshold = 1E-2d;
+            if (shouldSync) {
+                dx = this.getX() - armorStandPos.x;
+                dy = this.getY() - armorStandPos.y;
+                dz = this.getZ() - armorStandPos.z;
+            }
+            dx /= 2;
+            dy /= 2;
+            dz /= 2;
+            positionOffset.add(DoubleTag.valueOf((dx < -(threshold) || dx > threshold)?dx:0));
+            positionOffset.add(DoubleTag.valueOf((dy < -(threshold) || dy > threshold)?dy:0));
+            positionOffset.add(DoubleTag.valueOf((dz < -(threshold) || dz > threshold)?dz:0));
+            compoundTag.put("Move", positionOffset);
         }
-        positionOffset.add(DoubleTag.valueOf((dx < -(threshold) || dx > threshold)?dx:0));
-        positionOffset.add(DoubleTag.valueOf((dy < -(threshold) || dy > threshold)?dy:0));
-        positionOffset.add(DoubleTag.valueOf((dz < -(threshold) || dz > threshold)?dz:0));
-        compoundTag.put("Move", positionOffset);
 
         compoundTag.putBoolean("NoGravity", true);
 
