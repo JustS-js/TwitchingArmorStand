@@ -197,6 +197,22 @@ public class TWASModClient implements ClientModInitializer {
 											)
 									)
 							)
+							.then(ClientCommandManager.literal("simulate")
+									.then(ClientCommandManager.argument("nickname", StringArgumentType.word())
+											.then(ClientCommandManager.argument("message", StringArgumentType.greedyString())
+													.executes((commandContext) -> {
+																String nickname = commandContext.getArgument("nickname", String.class).toLowerCase();
+																String command = commandContext.getArgument("message", String.class).toLowerCase();
+																if (CONFIG.twitchNameToSerialized.containsKey(nickname) && command.startsWith("!s ")) {
+																	LOGGER.info("[{} (sim)]: {}",nickname,command);
+																	TWASManager.applyCommand(nickname,command.toLowerCase(Locale.ROOT));
+																}
+																return 1;
+															}
+													)
+											)
+									)
+							)
 			);
 		});
 	}
