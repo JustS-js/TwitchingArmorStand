@@ -72,7 +72,10 @@ public class TwitchingArmorStand extends ClientEntity {
                     List<Entity> entitiesWithRequestedName = this.level().getEntities(
                             this,
                             this.getBoundingBox().inflate(64),
-                            (e) -> entityName.equals(e.getPlainTextName().toLowerCase())
+                            (e) -> {
+                                String textName = e.getPlainTextName().toLowerCase();
+                                return textName.startsWith(entityName);
+                            }
                     );
                     if (entitiesWithRequestedName.isEmpty()) return;
                     Entity first = entitiesWithRequestedName.stream().filter(
