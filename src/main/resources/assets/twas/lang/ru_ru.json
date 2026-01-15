@@ -1,0 +1,10 @@
+{
+  "text.autoconfig.twas.option.entitiesSettings": "Настройки сущностей",
+  "text.autoconfig.twas.option.entitiesSettings.entityCollision": "Коллизия сущностей",
+  "text.autoconfig.twas.option.twitchIntegration": "Twitch интеграция",
+  "text.autoconfig.twas.option.twitchIntegration.clientId": "Client ID",
+  "text.autoconfig.twas.option.twitchIntegration.clientSecret": "Client Secret",
+  "text.autoconfig.twas.option.twitchIntegration.accessToken": "Access Token",
+  "text.autoconfig.twas.option.twitchIntegration.refreshToken": "Refresh Token",
+  "text.autoconfig.twas.option.twitchIntegration.userId": "ID пользователя Twitch"
+}
