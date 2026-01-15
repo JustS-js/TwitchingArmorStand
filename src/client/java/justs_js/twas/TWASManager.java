@@ -42,7 +42,7 @@ public class TWASManager {
                 (e) -> {
                     TwitchingArmorStand stand = (TwitchingArmorStand) e;
                     if (!stand.getBoundedNickname().equals(nickname)) return;
-                    String cmd = command.substring(3);
+                    String cmd = command.substring(3).strip();
                     List<String> parsed = parseCmd(cmd);
                     if (parsed.isEmpty()) return;
                     String first = parsed.getFirst();
