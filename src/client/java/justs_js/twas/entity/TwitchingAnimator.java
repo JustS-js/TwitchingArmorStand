@@ -221,7 +221,6 @@ public class TwitchingAnimator {
                 float appliedSpeed = this.animationSpeed * 1 / size;
                 animationAngle = (float) ((animationAngle + appliedSpeed) % (Math.PI * 2));
                 animationState = (float) ((1-Math.cos(animationAngle * animationMultiplier)) * animationMaxAngle) / 2;
-                Minecraft.getInstance().execute(() -> TWASModClient.LOGGER.info("{} | {}", animationAngle, animationState));
             }
 
             @Override
