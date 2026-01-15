@@ -139,6 +139,8 @@ public class TWASManager {
         Optional<BlockPos> blockPos = level.findSupportingBlock(stand, stand.getBoundingBox().expandTowards(0, 2, 0));
         Vec3 pos = blockPos.orElse(BlockPos.ZERO.atY(stand.getBlockY())).getBottomCenter().add(0, 1, 0);
         twStand.snapTo(new Vec3(stand.getX(), pos.y() + 0.15d, stand.getZ()), stand.getYRot(), stand.getXRot());
+        twStand.setYHeadRot(stand.getYHeadRot());
+        twStand.setYBodyRot(stand.yBodyRot);
         twStand.bound(nickname);
         twStand.bound(armorStandUuid);
         twStand.setFollowTargetEntity(level.getEntity(followTarget));
