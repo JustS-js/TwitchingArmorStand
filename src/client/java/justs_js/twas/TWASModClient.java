@@ -15,6 +15,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientEntityEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.Minecraft;
@@ -143,7 +144,7 @@ public class TWASModClient implements ClientModInitializer {
 												).toLowerCase(Locale.ROOT);
 												TWASConfig.SerializedEntity serialized = new TWASConfig.SerializedEntity();
 												serialized.boundedArmorStand = entity.getUUID();
-												serialized.lastCommand = "stop";
+												serialized.lastCommand = "!s stop";
 												serialized.followTarget = null;
 												CONFIG.twitchNameToSerialized.put(
 														nickname,
@@ -165,7 +166,7 @@ public class TWASModClient implements ClientModInitializer {
 												if (entity == null) return 0;
 												if (!(entity instanceof ArmorStand)) return 0;
 												AtomicReference<TwitchingArmorStand> atomicStandEntity = new AtomicReference<>();
-												CELModLib.controller.forEach(
+												TWASManager.forEach(
 														(e) -> {
 															TwitchingArmorStand stand = (TwitchingArmorStand)e;
 															if (stand.getBoundedUUID().equals(entity.getUUID())){

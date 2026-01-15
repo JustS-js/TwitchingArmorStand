@@ -7,9 +7,11 @@ import com.mojang.datafixers.util.Pair;
 import com.mrbysco.armorposer.Reference;
 import com.mrbysco.armorposer.data.SyncData;
 import com.mrbysco.armorposer.packets.ArmorStandSyncPayload;
+import justs_js.cel.CELModLib;
 import justs_js.cel.client.api.ClientBrain;
 import justs_js.cel.client.api.ClientEntity;
 import justs_js.cel.client.api.behaviour.*;
+import justs_js.twas.TWASManager;
 import justs_js.twas.TWASModClient;
 import justs_js.twas.config.TWASConfig;
 import justs_js.twas.entity.behavior.CustomClientFollowTargetSink;
@@ -17,6 +19,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.*;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.valueproviders.BiasedToBottomInt;
@@ -34,9 +37,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public class TwitchingArmorStand extends ClientEntity {
     public TwitchingArmorStand(EntityType<? extends ClientEntity> entityType, Level level) {
@@ -47,6 +48,27 @@ public class TwitchingArmorStand extends ClientEntity {
     private UUID boundedUUID;
 
     private final TwitchingAnimator animator = new TwitchingAnimator(1f);
+
+    @Override
+    public boolean isPushable() {
+        return super.isPushable() && TWASModClient.CONFIG.entitiesSettings.entityCollision;
+    }
+
+    @Override
+    protected void pushEntities() {
+        if (!TWASModClient.CONFIG.entitiesSettings.entityCollision) return;
+        TWASManager.forEach(
+                (entity) -> {
+                    if (this.getBoundingBox().intersects(entity.getBoundingBox())) {
+                        this.doPush(entity);
+                    }
+                }
+        );
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (this.getBoundingBox().intersects(player.getBoundingBox())) {
+            this.doPush(player);
+        }
+    }
 
     @Override
     public void tick() {
@@ -99,6 +121,7 @@ public class TwitchingArmorStand extends ClientEntity {
     public void checkDespawn() {
         super.checkDespawn();
         if (this.getBoundedArmorStand() == null) {
+            TWASManager.removeTickableEntity(this);
             this.discard();
         }
     }

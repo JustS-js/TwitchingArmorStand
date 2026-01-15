@@ -14,16 +14,31 @@ import net.minecraft.world.entity.schedule.Activity;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 public class TWASManager {
     private static final Map<UUID, String> observedUuids = new HashMap<>();
+    private static final ConcurrentLinkedQueue<Entity> tickableEntities = new ConcurrentLinkedQueue<>();
+
+    private static void addTickableEntity(Entity e) {
+        tickableEntities.add(e);
+    }
+
+    public static void removeTickableEntity(Entity e) {
+        tickableEntities.remove(e);
+    }
+
+    public static void forEach(Consumer<Entity> consumer) {
+        tickableEntities.forEach(consumer);
+    }
 
     private static List<String> parseCmd(String cmd) {
         return List.of(cmd.split(" "));
     }
 
     public static void applyCommand(String nickname, String command) {
-        CELModLib.controller.forEach(
+        tickableEntities.forEach(
                 (e) -> {
                     TwitchingArmorStand stand = (TwitchingArmorStand) e;
                     if (!stand.getBoundedNickname().equals(nickname)) return;
@@ -97,7 +112,7 @@ public class TWASManager {
 
     private static void removeAllWith(String nickname) {
         Set<TwitchingArmorStand> removed = new HashSet<>();
-        CELModLib.controller.forEach(
+        tickableEntities.forEach(
                 (e) -> {
                     TwitchingArmorStand stand = (TwitchingArmorStand) e;
                     if (stand.getBoundedNickname().equals(nickname)) {
@@ -107,6 +122,7 @@ public class TWASManager {
         );
         for (TwitchingArmorStand stand : removed) {
             observedUuids.remove(stand.getBoundedUUID());
+            TWASManager.removeTickableEntity(stand);
             stand.discard();
         }
     }
@@ -127,6 +143,7 @@ public class TWASManager {
         twStand.bound(armorStandUuid);
         twStand.setFollowTargetEntity(level.getEntity(followTarget));
         CELModLib.controller.addEntity(twStand);
+        addTickableEntity(twStand);
         applyCommand(nickname, lastCommand);
     }
 

@@ -16,6 +16,9 @@ public class TWASConfig implements ConfigData {
     public Map<String, SerializedEntity> twitchNameToSerialized = new HashMap<>();
 
     @ConfigEntry.Gui.CollapsibleObject
+    public EntitiesSettings entitiesSettings = new EntitiesSettings();
+
+    @ConfigEntry.Gui.CollapsibleObject
     public TwitchIntegration twitchIntegration = new TwitchIntegration();
 
     public static class TwitchIntegration {
@@ -30,5 +33,9 @@ public class TWASConfig implements ConfigData {
         public UUID boundedArmorStand;
         public String lastCommand;
         public UUID followTarget;
+    }
+
+    public static class EntitiesSettings {
+        public boolean entityCollision = true;
     }
 }
