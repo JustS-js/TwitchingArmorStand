@@ -120,6 +120,19 @@ public class TWASModClient implements ClientModInitializer {
 					if (entity instanceof ArmorStand) TWASManager.syncByUUID(entity.getUUID());
 				}
 		);
+		ClientEntityEvents.ENTITY_UNLOAD.register(
+				(entity, world) -> {
+					if (entity instanceof ArmorStand) TWASManager.forEach(
+							entity1 -> {
+								TwitchingArmorStand twStand = (TwitchingArmorStand)entity1;
+								if (twStand.getBoundedUUID().equals(entity.getUUID())) {
+									TWASManager.removeTickableEntity(twStand);
+									twStand.discard();
+								}
+							}
+					);
+				}
+		);
 
 		ClientPlayConnectionEvents.DISCONNECT.register(
 				(handler, client) -> {
