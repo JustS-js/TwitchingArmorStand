@@ -34,7 +34,7 @@ public class TWASManager {
     }
 
     private static List<String> parseCmd(String cmd) {
-        return List.of(cmd.split(" "));
+        return List.of(cmd.split("\\s+"));
     }
 
     public static void applyCommand(String nickname, String command) {
