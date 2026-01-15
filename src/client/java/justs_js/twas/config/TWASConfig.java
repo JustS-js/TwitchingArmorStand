@@ -13,7 +13,7 @@ import java.util.UUID;
 public class TWASConfig implements ConfigData {
 
     @ConfigEntry.Gui.Excluded
-    public Map<String, UUID> twitchNameToEntityUUID = new HashMap<>();
+    public Map<String, SerializedEntity> twitchNameToSerialized = new HashMap<>();
 
     @ConfigEntry.Gui.CollapsibleObject
     public TwitchIntegration twitchIntegration = new TwitchIntegration();
@@ -24,5 +24,11 @@ public class TWASConfig implements ConfigData {
         public String accessToken = "";
         public String refreshToken = "";
         public String userId = "";
+    }
+
+    public static class SerializedEntity {
+        public UUID boundedArmorStand;
+        public String lastCommand;
+        public UUID followTarget;
     }
 }

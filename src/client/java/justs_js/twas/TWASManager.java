@@ -2,7 +2,9 @@ package justs_js.twas;
 
 import justs_js.cel.CELModLib;
 import justs_js.cel.client.api.ClientBrain;
+import justs_js.twas.config.TWASConfig;
 import justs_js.twas.entity.TwitchingArmorStand;
+import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -30,7 +32,7 @@ public class TWASManager {
                     if (parsed.isEmpty()) return;
                     String first = parsed.getFirst();
                     switch (first) {
-                        case "twerk", "hello", "clap" -> stand.emote(first);
+                        case "twerk", "hello", "clap" -> {stand.emote(first); return;}
                         case "jump" -> stand.requestJump();
                         case "follow" -> stand.requestFollow(parsed.size() > 1 ? parsed.get(1) : "");
                         case "stop" -> Minecraft.getInstance().execute(() -> {
@@ -41,12 +43,14 @@ public class TWASManager {
                         });
                         case null, default -> {}
                     }
+                    TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).lastCommand = command;
+                    AutoConfig.getConfigHolder(TWASConfig.class).save();
                 }
         );
     }
 
     public static void sync() {
-        for (String nickname : TWASModClient.CONFIG.twitchNameToEntityUUID.keySet()) {
+        for (String nickname : TWASModClient.CONFIG.twitchNameToSerialized.keySet()) {
             syncByNickname(nickname);
         }
     }
@@ -56,8 +60,8 @@ public class TWASManager {
         if (observedUuids.containsKey(uuid)) {
             nickname = observedUuids.get(uuid);
         } else {
-            for (Map.Entry<String, UUID> entry : TWASModClient.CONFIG.twitchNameToEntityUUID.entrySet()) {
-                if (entry.getValue().equals(uuid)) {
+            for (Map.Entry<String, TWASConfig.SerializedEntity> entry : TWASModClient.CONFIG.twitchNameToSerialized.entrySet()) {
+                if (uuid.equals(entry.getValue().boundedArmorStand)) {
                     nickname = entry.getKey();
                     break;
                 }
@@ -67,22 +71,26 @@ public class TWASManager {
             return;
         }
 
-        if (!uuid.equals(TWASModClient.CONFIG.twitchNameToEntityUUID.get(nickname))) {
+        if (!uuid.equals(TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).boundedArmorStand)) {
             removeAllWith(nickname);
         }
-        UUID confUUID = TWASModClient.CONFIG.twitchNameToEntityUUID.get(nickname);
+        UUID confUUID = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).boundedArmorStand;
+        String lastCommand = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).lastCommand;
+        UUID followUUID = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).followTarget;
         observedUuids.put(confUUID, nickname);
-        createTwitchedArmorStand(nickname, confUUID);
+        createTwitchedArmorStand(nickname, confUUID, lastCommand, followUUID);
     }
 
     public static void syncByNickname(String nickname) {
-        if (!TWASModClient.CONFIG.twitchNameToEntityUUID.containsKey(nickname)) {
+        if (!TWASModClient.CONFIG.twitchNameToSerialized.containsKey(nickname)) {
             removeAllWith(nickname);
             return;
         }
-        UUID uuid = TWASModClient.CONFIG.twitchNameToEntityUUID.get(nickname);
+        UUID uuid = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).boundedArmorStand;
+        String lastCommand = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).lastCommand;
+        UUID followUUID = TWASModClient.CONFIG.twitchNameToSerialized.get(nickname).followTarget;
         if (!observedUuids.containsKey(uuid)) {
-            createTwitchedArmorStand(nickname, uuid);
+            createTwitchedArmorStand(nickname, uuid, lastCommand, followUUID);
         }
         observedUuids.put(uuid, nickname);
     }
@@ -103,21 +111,23 @@ public class TWASManager {
         }
     }
 
-    private static void createTwitchedArmorStand(String nickname, UUID uuid) {
+    private static void createTwitchedArmorStand(String nickname, UUID armorStandUuid, String lastCommand, UUID followTarget) {
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) {
-            TWASModClient.LOGGER.warn("Trying to bond {} with {} without world", uuid, nickname);
+            TWASModClient.LOGGER.warn("Trying to bond {} with {} without world", armorStandUuid, nickname);
             return;
         }
-        ArmorStand stand = parseUUID(uuid);
+        ArmorStand stand = parseUUID(armorStandUuid);
         if (stand == null) {return;}
         TwitchingArmorStand twStand = new TwitchingArmorStand(TWASModClient.TWITCHING_ARMOR_STAND, level);
         Optional<BlockPos> blockPos = level.findSupportingBlock(stand, stand.getBoundingBox().expandTowards(0, 2, 0));
         Vec3 pos = blockPos.orElse(BlockPos.ZERO.atY(stand.getBlockY())).getBottomCenter().add(0, 1, 0);
         twStand.snapTo(new Vec3(stand.getX(), pos.y() + 0.15d, stand.getZ()), stand.getYRot(), stand.getXRot());
         twStand.bound(nickname);
-        twStand.bound(uuid);
+        twStand.bound(armorStandUuid);
+        twStand.setFollowTargetEntity(level.getEntity(followTarget));
         CELModLib.controller.addEntity(twStand);
+        applyCommand(nickname, lastCommand);
     }
 
     private static ArmorStand parseUUID(UUID uuid) {

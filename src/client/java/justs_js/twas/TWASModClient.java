@@ -90,7 +90,7 @@ public class TWASModClient implements ClientModInitializer {
 				(event) -> {
 					String nickname = ((TwitchChatMessageEvent) event).getChatterUserLogin();
 					String command = ((TwitchChatMessageEvent) event).getMessageText();
-					if (CONFIG.twitchNameToEntityUUID.containsKey(nickname) && command.startsWith("!s ")) {
+					if (CONFIG.twitchNameToSerialized.containsKey(nickname) && command.startsWith("!s ")) {
 						LOGGER.info("[{}]: {}",nickname,command);
 						TWASManager.applyCommand(nickname,command.toLowerCase(Locale.ROOT));
 					}
@@ -141,10 +141,14 @@ public class TWASModClient implements ClientModInitializer {
 														"nickname",
 														String.class
 												).toLowerCase(Locale.ROOT);
-												CONFIG.twitchNameToEntityUUID.put(
+												TWASConfig.SerializedEntity serialized = new TWASConfig.SerializedEntity();
+												serialized.boundedArmorStand = entity.getUUID();
+												serialized.lastCommand = "stop";
+												serialized.followTarget = null;
+												CONFIG.twitchNameToSerialized.put(
 														nickname,
-														entity.getUUID()
-												);
+														serialized
+                                                );
 												AutoConfig.getConfigHolder(TWASConfig.class).save();
 												TWASManager.syncByNickname(nickname);
 												commandContext.getSource().sendFeedback(
@@ -175,7 +179,7 @@ public class TWASModClient implements ClientModInitializer {
 													return 0;
 												}
 												String nickname = standEntity.getBoundedNickname();
-												CONFIG.twitchNameToEntityUUID.remove(nickname);
+												CONFIG.twitchNameToSerialized.remove(nickname);
 												TWASManager.syncByNickname(nickname);
 												commandContext.getSource().sendFeedback(Component.literal("unbounded with " + nickname));
 												return 1;
@@ -184,7 +188,7 @@ public class TWASModClient implements ClientModInitializer {
 									.then(ClientCommandManager.argument("nickname", StringArgumentType.word())
 											.executes((commandContext) -> {
 														String nickname = commandContext.getArgument("nickname", String.class);
-														CONFIG.twitchNameToEntityUUID.remove(nickname);
+														CONFIG.twitchNameToSerialized.remove(nickname);
 														TWASManager.syncByNickname(nickname);
 														commandContext.getSource().sendFeedback(Component.literal("unbounded with " + nickname));
 														return 1;

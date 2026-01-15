@@ -10,7 +10,10 @@ import com.mrbysco.armorposer.packets.ArmorStandSyncPayload;
 import justs_js.cel.client.api.ClientBrain;
 import justs_js.cel.client.api.ClientEntity;
 import justs_js.cel.client.api.behaviour.*;
+import justs_js.twas.TWASModClient;
+import justs_js.twas.config.TWASConfig;
 import justs_js.twas.entity.behavior.CustomClientFollowTargetSink;
+import me.shedaniel.autoconfig.AutoConfig;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -85,6 +88,9 @@ public class TwitchingArmorStand extends ClientEntity {
                     brain.stopAll((ClientLevel) this.level(), this);
                     this.setFollowTargetEntity(first);
                     brain.setActiveActivityIfPossible(Activity.INVESTIGATE);
+                    TWASModClient.CONFIG.twitchNameToSerialized.get(getBoundedNickname()).followTarget =
+                            (first != null) ? first.getUUID() : null;
+                    AutoConfig.getConfigHolder(TWASConfig.class).save();
                 }
         );
     }
