@@ -14,17 +14,21 @@ repositories {
 	maven { url "https://maven.shedaniel.me/" }
 	maven { url "https://maven.terraformersmc.com/releases/" }
 
-	flatDir {
-		dirs 'libs'
-	}
-
 	maven {
 		name "saps"
 		url "https://maven.saps.dev/releases"
 	}
-	maven {
-		name = "Modrinth"
-		url = "https://api.modrinth.com/maven"
+
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = "Modrinth"
+				url = "https://api.modrinth.com/maven"
+			}
+		}
+		filter {
+			includeGroup "maven.modrinth"
+		}
 	}
 }
 
@@ -58,8 +62,8 @@ dependencies {
 	modRuntimeOnly "com.mrbysco.armorposer:ArmorPoser-fabric-${project.minecraft_version}:${project.armor_poser_version}"
 
 	// justs
-	modApi "justs_js.integrationapi:integrationapi:${project.integration_api_version}"
-	modApi "justs_js.cel:cel:${project.cel_version}"
+	modApi "maven.modrinth:integration-api:${project.integration_api_version}"
+	modApi "maven.modrinth:client-entities:${project.cel_version}"
 }
 
 processResources {
