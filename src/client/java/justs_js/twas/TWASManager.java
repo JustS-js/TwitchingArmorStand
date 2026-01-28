@@ -136,7 +136,7 @@ public class TWASManager {
         ArmorStand stand = parseUUID(armorStandUuid);
         if (stand == null) {return;}
         TwitchingArmorStand twStand = new TwitchingArmorStand(TWASModClient.TWITCHING_ARMOR_STAND, level);
-        Optional<BlockPos> blockPos = level.findSupportingBlock(stand, stand.getBoundingBox().expandTowards(0, 2, 0));
+        Optional<BlockPos> blockPos = level.findSupportingBlock(stand, stand.getBoundingBox().inflate(0, 1, 0));
         Vec3 pos = blockPos.orElse(BlockPos.ZERO.atY(stand.getBlockY())).getBottomCenter().add(0, 1, 0);
         twStand.snapTo(new Vec3(stand.getX(), pos.y() + 0.15d, stand.getZ()), stand.getYRot(), stand.getXRot());
         twStand.setYHeadRot(stand.getYHeadRot());

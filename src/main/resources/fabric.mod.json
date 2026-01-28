@@ -21,12 +21,6 @@
 			"justs_js.twas.config.TWASModMenuIntegration"
 		]
 	},
-	"mixins": [
-		{
-			"config": "twas.client.mixins.json",
-			"environment": "client"
-		}
-	],
 	"depends": {
 		"fabricloader": ">=0.18.2",
 		"minecraft": ">=1.21.10",

@@ -102,16 +102,17 @@ public class TwitchingArmorStand extends ClientEntity {
                                 return textName.startsWith(entityName);
                             }
                     );
-                    if (entitiesWithRequestedName.isEmpty()) return;
-                    Entity first = entitiesWithRequestedName.stream().filter(
+                    List<Entity> notBounded = entitiesWithRequestedName.stream().filter(
                             (e) -> !e.getUUID().equals(this.getBoundedUUID())
-                    ).findFirst().orElse(null);
+                    ).toList();
+                    if (notBounded.isEmpty()) return;
+                    Entity closest = notBounded.stream().min(Comparator.comparingDouble(e -> e.distanceToSqr(this.getX(), this.getY(), this.getZ()))).orElse(null);
                     ClientBrain<TwitchingArmorStand> brain = (ClientBrain<TwitchingArmorStand>)this.getBrain();
                     brain.stopAll((ClientLevel) this.level(), this);
-                    this.setFollowTargetEntity(first);
+                    this.setFollowTargetEntity(closest);
                     brain.setActiveActivityIfPossible(Activity.INVESTIGATE);
                     TWASModClient.CONFIG.twitchNameToSerialized.get(getBoundedNickname()).followTarget =
-                            (first != null) ? first.getUUID() : null;
+                            (closest != null) ? closest.getUUID() : null;
                     AutoConfig.getConfigHolder(TWASConfig.class).save();
                 }
         );
